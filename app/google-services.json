@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "696084312044",
+    "firebase_url": "https://starprntexample.firebaseio.com",
+    "project_id": "starprntexample",
+    "storage_bucket": "starprntexample.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696084312044:android:94b589b0635615bd",
+        "android_client_info": {
+          "package_name": "com.example.demostarprnt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "696084312044-k8iuhjr8u4qsr6nsfmlj6ciulbeb2bm2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgJUdWQyX0NG-_Yppu-uKiYg6I3JXYbqc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "696084312044-k8iuhjr8u4qsr6nsfmlj6ciulbeb2bm2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
