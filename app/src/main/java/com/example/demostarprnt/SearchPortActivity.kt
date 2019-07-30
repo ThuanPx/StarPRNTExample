@@ -80,7 +80,7 @@ class SearchPortActivity : AppCompatActivity() {
 
         btSearchPort.setOnClickListener {
             loading.visibility = View.VISIBLE
-            SearchTask(this).execute(Constants.IF_TYPE_USB)
+            SearchTask(this).execute(Constants.IF_TYPE_ETHERNET)
         }
 
         btSearchPortBLE.setOnClickListener {

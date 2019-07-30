@@ -1,5 +1,6 @@
 package com.example.demostarprnt;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -25,10 +26,10 @@ public abstract class ILocalizeReceipts {
     private String mScalePaperSizeStr;
     protected CharacterCode mCharacterCode;
 
-    public static ILocalizeReceipts createLocalizeReceipts(int language, int paperSize) {
+    public static ILocalizeReceipts createLocalizeReceipts(Context context, int language, int paperSize, boolean hasPayment) {
         ILocalizeReceipts localizeReceipts;
 
-        localizeReceipts = new JapaneseReceiptsImpl();
+        localizeReceipts = new JapaneseReceiptsImpl(context, hasPayment);
 
         switch (paperSize) {
             case PAPER_SIZE_TWO_INCH:
