@@ -1,16 +1,14 @@
 package com.example.demostarprnt;
 
+import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Typeface;
-
+import android.graphics.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
+import androidx.appcompat.widget.AppCompatTextView;
 import com.starmicronics.starioextension.ICommandBuilder;
-import com.starmicronics.starioextension.ICommandBuilder.AlignmentPosition;
-import com.starmicronics.starioextension.ICommandBuilder.BarcodeSymbology;
-import com.starmicronics.starioextension.ICommandBuilder.BarcodeWidth;
-import com.starmicronics.starioextension.ICommandBuilder.CodePageType;
-import com.starmicronics.starioextension.ICommandBuilder.InternationalType;
+import com.starmicronics.starioextension.ICommandBuilder.*;
 import com.starmicronics.starioextension.StarIoExt.CharacterCode;
 
 import java.nio.charset.Charset;
@@ -18,7 +16,13 @@ import java.nio.charset.UnsupportedCharsetException;
 
 public class JapaneseReceiptsImpl extends ILocalizeReceipts {
 
-    public JapaneseReceiptsImpl() {
+    private Context context;
+    private boolean hasPayment;
+
+    public JapaneseReceiptsImpl(Context context, boolean hasPayment) {
+        this.context = context;
+        this.hasPayment = hasPayment;
+
         mLanguageCode = "Ja";
 
         mCharacterCode = CharacterCode.Japanese;
@@ -32,14 +36,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -52,17 +54,18 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
 
         builder.appendAlignment(AlignmentPosition.Center);
 
-        Bitmap logo = BitmapFactory.decodeResource(resources, R.drawable.ic_launcher);
+        // ========== Creating Number =========
+        builder.appendBitmap(getTicketIDBitmap(hasPayment), true);
+        // ========== Creating Number =========
 
-        builder.appendBitmap(logo, true);
 
         builder.appendEmphasis(true);
 
         builder.appendAlignment(AlignmentPosition.Left);
 
         builder.append((
-                        "Neolab - VN\n" +
-                        "\n"+
+                "\n\nNeolab - VN\n" +
+                        "\n" +
                         "TEL(03)-1234-5678\n").getBytes(encoding));
 
         builder.appendEmphasis(false);
@@ -74,33 +77,60 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
 //        String finalText =  nameMenu + space + price
 
         builder.append((
-                        "344 Duong 2/9 \n" +
+                "344 Duong 2/9 \n" +
                         "\n" +
                         "July 31,2019 at 19:09 \n" +
-                        "\n"+
+                        "\n" +
                         "Order-a                                  ¥99.999\n").getBytes(encoding));
 
         builder.appendEmphasis(true);
 
         builder.append((
-                        "subtotal                                      ¥0\n"+
-                        "tax                                           ¥0\n"+
-                        "Billing                                  ¥99.999\n"+
+                "subtotal                                      ¥0\n" +
+                        "tax                                           ¥0\n" +
+                        "Billing                                  ¥99.999\n" +
                         "\n").getBytes(encoding));
 
         builder.appendEmphasis(false);
 
         builder.append((
-                        "Card-No                         *****-*****-0109\n"+
+                "Card-No                         *****-*****-0109\n" +
                         "Order-No                               123456789\n").getBytes(encoding));
 
 
         builder.appendAlignment(AlignmentPosition.Center);
 
-        Bitmap qrCode = BitmapFactory.decodeResource(resources, R.drawable.ic_launcher);
+        // TODO Print QR CODE, still existing bug: Image has been scaled
+//        builder.appendBitmap(getQRCodeBitmap(), true, 300, true);
+    }
 
-        builder.appendBitmap(bitmap, false);
+    private Bitmap getTicketIDBitmap(boolean hasPayment) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_header, null, false);
+        ((AppCompatTextView) view.findViewById(R.id.tvNumber)).setText("210");
 
+        if (!hasPayment) {
+            view = LayoutInflater.from(context).inflate(R.layout.item_header_white, null, false);
+            ((AppCompatTextView) view.findViewById(R.id.tvNumber)).setText("010");
+        }
+
+        if (view.getMeasuredHeight() <= 0) {
+            view.measure(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            Bitmap b = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(b);
+            view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+            view.draw(c);
+            return b;
+        }
+
+        Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
+        view.draw(c);
+        return b;
+    }
+
+    private Bitmap getQRCodeBitmap() {
+        return BitmapFactory.decodeResource(context.getResources(), R.drawable.qrcode_example);
     }
 
     @Override
@@ -136,7 +166,7 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
                         "\n" +
                         "　お問合わせ番号　　12345-67890\n";
 
-        int      textSize = 24;
+        int textSize = 24;
         Typeface typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
 
         return createBitmapFromText(textToPrint, textSize, Constants.PAPER_SIZE_FOUR_INCH, typeface);
@@ -150,14 +180,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -223,14 +251,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -296,14 +322,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -395,7 +419,7 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
                         "\n" +
                         "　お問合わせ番号　　12345-67890\n";
 
-        int      textSize = 22;
+        int textSize = 22;
         Typeface typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
 
         return createBitmapFromText(textToPrint, textSize, Constants.PAPER_SIZE_TWO_INCH, typeface);
@@ -434,7 +458,7 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
                         "\n" +
                         "　お問合わせ番号　　12345-67890\n";
 
-        int      textSize = 24;
+        int textSize = 24;
         Typeface typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
 
         return createBitmapFromText(textToPrint, textSize, Constants.PAPER_SIZE_THREE_INCH, typeface);
@@ -473,7 +497,7 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
                         "\n" +
                         "　お問合わせ番号　　12345-67890\n";
 
-        int      textSize = 24;
+        int textSize = 24;
         Typeface typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
 
         return createBitmapFromText(textToPrint, textSize, Constants.PAPER_SIZE_FOUR_INCH, typeface);
@@ -488,7 +512,7 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
     public Bitmap createEscPos3inchRasterReceiptImage() {
         String textToPrint =
                 "\n" +
-                "　　　　　　　 スター電機\n" +
+                        "　　　　　　　 スター電機\n" +
                         "　　　　　 修理報告書　兼領収書\n" +
                         "-----------------------------------\n" +
                         "発行日時：YYYY年MM月DD日HH時MM分\n" +
@@ -518,7 +542,7 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
                         "\n" +
                         "　お問合わせ番号　　12345-67890\n";
 
-        int      textSize = 24;
+        int textSize = 24;
         Typeface typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
 
         return createBitmapFromText(textToPrint, textSize, Constants.PAPER_SIZE_ESCPOS_THREE_INCH, typeface);
@@ -532,14 +556,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -607,14 +629,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -671,14 +691,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);
@@ -711,8 +729,8 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
     @Override
     public String createPasteTextLabelString() {
         return "〒422-8654\n" +
-               "静岡県静岡市駿河区中吉田20番10号\n" +
-               "スター精密株式会社";
+                "静岡県静岡市駿河区中吉田20番10号\n" +
+                "スター精密株式会社";
     }
 
     @Override
@@ -723,14 +741,12 @@ public class JapaneseReceiptsImpl extends ILocalizeReceipts {
             encoding = Charset.forName("UTF-8");
 
             builder.appendCodePage(CodePageType.UTF8);
-        }
-        else {
+        } else {
             try {
                 encoding = Charset.forName("Shift-JIS");
 
                 builder.appendCodePage(CodePageType.CP932);
-            }
-            catch (UnsupportedCharsetException e) {
+            } catch (UnsupportedCharsetException e) {
                 encoding = Charset.forName("UTF-8");
 
                 builder.appendCodePage(CodePageType.UTF8);

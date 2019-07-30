@@ -1,9 +1,13 @@
 package com.example.demostarprnt
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.StrictMode
+import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.crashlytics.android.Crashlytics
 import com.example.demostarprnt.Constants.PAPER_SIZE_FOUR_INCH
 import com.example.demostarprnt.sharedprf.SharedPrefsApi
@@ -13,19 +17,9 @@ import com.starmicronics.starioextension.ICommandBuilder
 import com.starmicronics.starioextension.StarIoExtManager
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
-import android.graphics.BitmapFactory
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
-import android.util.Log
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import android.os.StrictMode
-
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -59,9 +53,9 @@ class MainActivity : AppCompatActivity() {
 
         btPrinter.setOnClickListener {
             printerRepository.getPrinterInfo()?.let {
-                getBitmapFromURL(urltest)?.let {bitmap->
-                    Log.i("test",it.toString())
-                    print(it,bitmap)
+                getBitmapFromURL(urltest)?.let { bitmap ->
+                    Log.i("test", it.toString())
+                    print(it, bitmap, true)
                 }
 //                Glide.with(this)
 //                    .asBitmap()
@@ -75,6 +69,15 @@ class MainActivity : AppCompatActivity() {
 //                        override fun onLoadCleared(placeholder: Drawable?) {
 //                        }
 //                    })
+            }
+        }
+
+        btPrinterNotPayYet.setOnClickListener {
+            printerRepository.getPrinterInfo()?.let {
+                getBitmapFromURL(urltest)?.let { bitmap ->
+                    Log.i("test", it.toString())
+                    print(it, bitmap, false)
+                }
             }
         }
 
@@ -99,13 +102,13 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun print(printerInfo: PortInfo, bitmap: Bitmap) {
+    private fun print(printerInfo: PortInfo, bitmap: Bitmap, hasPayment: Boolean) {
 
         val data: ByteArray
 
         val emulation = ModelCapability.getEmulation(21)
 
-        val localizeReceipts = ILocalizeReceipts.createLocalizeReceipts(1, PAPER_SIZE_FOUR_INCH)
+        val localizeReceipts = ILocalizeReceipts.createLocalizeReceipts(this, 1, PAPER_SIZE_FOUR_INCH, hasPayment)
 
         data = PrinterFunctions.createTextReceiptData(emulation, localizeReceipts, true, resources, bitmap)
 
